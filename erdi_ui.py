@@ -209,14 +209,25 @@ def cpu_name():
 
 def cpu_usage():
     def sample():
-        line_text = read_file("/proc/stat").splitlines()[0]
-        parts = [int(x) for x in line_text.split()[1:]]
-        idle = parts[3] + (parts[4] if len(parts) > 4 else 0)
-        return idle, sum(parts)
+        lines = read_file("/proc/stat").splitlines()
+        if not lines:
+            return 0, 0
+        parts = lines[0].split()[1:]
+        if len(parts) < 4:
+            return 0, 0
+        try:
+            numbers = [int(x) for x in parts]
+        except ValueError:
+            return 0, 0
+        idle = numbers[3] + (numbers[4] if len(numbers) > 4 else 0)
+        return idle, sum(numbers)
 
-    idle1, total1 = sample()
-    time.sleep(0.25)
-    idle2, total2 = sample()
+    try:
+        idle1, total1 = sample()
+        time.sleep(0.25)
+        idle2, total2 = sample()
+    except Exception:
+        return 0
     delta_total = total2 - total1
     delta_idle = idle2 - idle1
     if delta_total <= 0:
@@ -281,12 +292,30 @@ def uptime_stats():
 
 def dashboard():
     """Load screen: GitHub box + live device bars."""
-    wifi_name, wifi_pct, wifi_detail = wifi_percent()
-    uptime, last_boot = uptime_stats()
-    total_ram, used_ram, free_ram, ram_pct = mem_stats()
-    cpu_pct = cpu_usage()
-    storage_path, total_disk, used_disk, free_disk, used_disk_pct, free_disk_pct = storage_stats()
-    proc = cpu_name()
+    try:
+        wifi_name, wifi_pct, wifi_detail = wifi_percent()
+    except Exception:
+        wifi_name, wifi_pct, wifi_detail = "uplink", 0, "unknown"
+    try:
+        uptime, last_boot = uptime_stats()
+    except Exception:
+        uptime, last_boot = "unknown", "unknown"
+    try:
+        total_ram, used_ram, free_ram, ram_pct = mem_stats()
+    except Exception:
+        total_ram = used_ram = free_ram = ram_pct = 0
+    try:
+        cpu_pct = cpu_usage()
+    except Exception:
+        cpu_pct = 0
+    try:
+        storage_path, total_disk, used_disk, free_disk, used_disk_pct, free_disk_pct = storage_stats()
+    except Exception:
+        storage_path, total_disk, used_disk, free_disk, used_disk_pct, free_disk_pct = "?", 0, 0, 0, 0, 0
+    try:
+        proc = cpu_name()
+    except Exception:
+        proc = "unknown"
 
     print(paint("  SYSTEM HUD", BOLD_CYAN))
     print(paint("  " + line("─", 42), DIM))
@@ -528,7 +557,14 @@ def main_menu():
 
 
 def main():
-    boot_sequence()
+    try:
+        boot_sequence()
+    except Exception as error:
+        clear()
+        print("Startup error:")
+        print(error)
+        print()
+        input("Press Enter to try the menu anyway...")
     actions = {
         "1": scan_device,
         "2": scan_memory,

@@ -1,4 +1,5 @@
 # ErdiUI
+#Still Broken Af
 
 A Termux operator console with a loud hacker look.
 

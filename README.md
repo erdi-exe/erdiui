@@ -1,5 +1,6 @@
 # ErdiUI
 #Still Broken Af
+#Not as broken, i kind of fixed some things that were not working, 70% done
 
 A Termux operator console with a loud hacker look.
 

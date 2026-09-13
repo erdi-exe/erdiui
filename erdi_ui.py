@@ -1,6 +1,7 @@
 # ErdiUI | https://github.com/erdi-exe
 # Hacker-style control panel for Termux.
 # Run: python erdi_ui.py
+# Very Broken, wait till next update
 
 import json
 import os
